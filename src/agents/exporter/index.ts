@@ -1,38 +1,54 @@
 import { createRequire } from "module";
 import { writeFileSync, mkdirSync } from "fs";
 import { dirname } from "path";
-import type { GraphState } from "../../types/state.js";
+import type { IAgent } from "../../types/interfaces.js";
+import type { GraphState, QACard, ClozeCard } from "../../types/state.js";
 
 // anki-apkg-export is a CommonJS module
 const require = createRequire(import.meta.url);
 const AnkiExport = require("anki-apkg-export").default;
 
-export async function exporterAgent(
-  state: GraphState,
-): Promise<Partial<GraphState>> {
-  const { qaCards, clozeCards, deckName, outputPath } = state;
+export class ExporterAgent implements IAgent {
+  async run(state: GraphState): Promise<Partial<GraphState>> {
+    const { qaCards, clozeCards, deckName, outputPath } = state;
 
-  console.log(`\n[ExporterAgent] Building Anki deck: "${deckName}"`);
-  console.log(
-    `[ExporterAgent] Q&A cards: ${qaCards.length} | Cloze cards: ${clozeCards.length}`,
-  );
+    console.log(`\n[ExporterAgent] Building Anki deck: "${deckName}"`);
+    console.log(
+      `[ExporterAgent] Q&A cards: ${qaCards.length} | Cloze cards: ${clozeCards.length}`,
+    );
 
-  const apkg = AnkiExport(deckName);
+    const apkg = this.createDeck(deckName);
+    this.addQACards(apkg, qaCards);
+    this.addClozeCards(apkg, clozeCards);
 
-  for (const card of qaCards) {
-    apkg.addCard(card.front, card.back, { tags: ["qa"] });
+    const zip = await apkg.save();
+    this.saveFile(outputPath, zip);
+
+    console.log(`[ExporterAgent] Deck saved to: ${outputPath}`);
+    return { outputPath };
   }
 
-  for (const card of clozeCards) {
-    apkg.addCard(card.text, card.text, { tags: ["cloze"] });
+  private createDeck(deckName: string) {
+    return AnkiExport(deckName);
   }
 
-  const zip = await apkg.save();
+  private addQACards(apkg: ReturnType<typeof AnkiExport>, cards: QACard[]) {
+    for (const card of cards) {
+      apkg.addCard(card.front, card.back, { tags: ["qa"] });
+    }
+  }
 
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, zip, "binary");
+  private addClozeCards(
+    apkg: ReturnType<typeof AnkiExport>,
+    cards: ClozeCard[],
+  ) {
+    for (const card of cards) {
+      apkg.addCard(card.text, card.text, { tags: ["cloze"] });
+    }
+  }
 
-  console.log(`[ExporterAgent] Deck saved to: ${outputPath}`);
-
-  return { outputPath };
+  private saveFile(outputPath: string, zip: Buffer) {
+    mkdirSync(dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, zip, "binary");
+  }
 }

@@ -1,33 +1,53 @@
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import type { IAgent } from "../../types/interfaces.js";
 import type { GraphState } from "../../types/state.js";
 
-const CHUNK_SIZE = 2000;
-const CHUNK_OVERLAP = 200;
-const MIN_CHUNK_LENGTH = 50;
+interface ExtractorConfig {
+  chunkSize?: number;
+  chunkOverlap?: number;
+  minChunkLength?: number;
+}
 
-export async function extractorAgent(
-  state: GraphState,
-): Promise<Partial<GraphState>> {
-  console.log(`\n[ExtractorAgent] Loading PDF: ${state.pdfPath}`);
+export class ExtractorAgent implements IAgent {
+  private readonly chunkSize: number;
+  private readonly chunkOverlap: number;
+  private readonly minChunkLength: number;
 
-  const loader = new PDFLoader(state.pdfPath);
-  const docs = await loader.load();
+  constructor(config: ExtractorConfig = {}) {
+    this.chunkSize = config.chunkSize ?? 2000;
+    this.chunkOverlap = config.chunkOverlap ?? 200;
+    this.minChunkLength = config.minChunkLength ?? 50;
+  }
 
-  const totalPages = docs.length;
-  console.log(`[ExtractorAgent] Loaded ${totalPages} page(s)`);
+  async run(state: GraphState): Promise<Partial<GraphState>> {
+    console.log(`\n[ExtractorAgent] Loading PDF: ${state.pdfPath}`);
 
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: CHUNK_SIZE,
-    chunkOverlap: CHUNK_OVERLAP,
-  });
+    const docs = await this.loadPDF(state.pdfPath);
+    const totalPages = docs.length;
+    console.log(`[ExtractorAgent] Loaded ${totalPages} page(s)`);
 
-  const splitDocs = await splitter.splitDocuments(docs);
-  const chunks = splitDocs
-    .map((doc) => doc.pageContent.trim())
-    .filter((c) => c.length > MIN_CHUNK_LENGTH);
+    const chunks = await this.splitIntoChunks(docs);
+    console.log(`[ExtractorAgent] Split into ${chunks.length} chunk(s)`);
 
-  console.log(`[ExtractorAgent] Split into ${chunks.length} chunk(s)`);
+    return { chunks, totalPages };
+  }
 
-  return { chunks, totalPages };
+  private async loadPDF(pdfPath: string) {
+    const loader = new PDFLoader(pdfPath);
+    return loader.load();
+  }
+
+  private async splitIntoChunks(docs: Awaited<ReturnType<PDFLoader["load"]>>) {
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: this.chunkSize,
+      chunkOverlap: this.chunkOverlap,
+    });
+
+    const splitDocs = await splitter.splitDocuments(docs);
+
+    return splitDocs
+      .map((doc) => doc.pageContent.trim())
+      .filter((chunk) => chunk.length > this.minChunkLength);
+  }
 }

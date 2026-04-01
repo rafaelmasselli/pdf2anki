@@ -1,4 +1,6 @@
-export { extractorAgent } from "./extractor/index.js";
-export { qaAgent } from "./qa/index.js";
-export { clozeAgent } from "./cloze/index.js";
-export { exporterAgent } from "./exporter/index.js";
+export { ConfigAgent } from "./config/index.js";
+export { ExtractorAgent } from "./extractor/index.js";
+export { AnalyzerAgent } from "./analyzer/index.js";
+export { QAAgent } from "./qa/index.js";
+export { ClozeAgent } from "./cloze/index.js";
+export { ExporterAgent } from "./exporter/index.js";

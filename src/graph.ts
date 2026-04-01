@@ -1,16 +1,44 @@
 import { StateGraph, END, START } from "@langchain/langgraph";
 import { Annotation } from "@langchain/langgraph";
 import {
-  extractorAgent,
-  qaAgent,
-  clozeAgent,
-  exporterAgent,
+  ConfigAgent,
+  ExtractorAgent,
+  AnalyzerAgent,
+  QAAgent,
+  ClozeAgent,
+  ExporterAgent,
 } from "./agents/index.js";
-import type { GraphState, QACard, ClozeCard } from "./types/state.js";
+import { GeminiProvider } from "./lib/llm.js";
+import type {
+  GraphState,
+  QACard,
+  ClozeCard,
+  StudyContext,
+  DocumentSummary,
+} from "./types/state.js";
+import type { IAgent } from "./types/interfaces.js";
 
 const PipelineState = Annotation.Root({
   pdfPath: Annotation<string>(),
   deckName: Annotation<string>(),
+  studyContext: Annotation<StudyContext>({
+    default: () => ({
+      language: "same as PDF",
+      level: "undergraduate",
+      goal: "general review",
+      additionalNotes: "none",
+    }),
+    reducer: (_, next) => next,
+  }),
+  documentSummary: Annotation<DocumentSummary>({
+    default: () => ({
+      language: "unknown",
+      topic: "",
+      keyConcepts: "",
+      summary: "",
+    }),
+    reducer: (_, next) => next,
+  }),
   chunks: Annotation<string[]>({
     default: () => [],
     reducer: (_, next) => next,
@@ -36,42 +64,9 @@ const PipelineState = Annotation.Root({
 
 type PipelineStateType = typeof PipelineState.State;
 
-async function extractorNode(
-  state: PipelineStateType,
-): Promise<Partial<PipelineStateType>> {
-  return extractorAgent(state as GraphState);
-}
-
-async function qaNode(
-  state: PipelineStateType,
-): Promise<Partial<PipelineStateType>> {
-  return qaAgent(state as GraphState);
-}
-
-async function clozeNode(
-  state: PipelineStateType,
-): Promise<Partial<PipelineStateType>> {
-  return clozeAgent(state as GraphState);
-}
-
-async function cardGenerationNode(
-  state: PipelineStateType,
-): Promise<Partial<PipelineStateType>> {
-  console.log("\n[Pipeline] Running QA and Cloze agents in parallel...");
-  const [qaResult, clozeResult] = await Promise.all([
-    qaNode(state),
-    clozeNode(state),
-  ]);
-  return {
-    qaCards: qaResult.qaCards ?? [],
-    clozeCards: clozeResult.clozeCards ?? [],
-  };
-}
-
-async function exporterNode(
-  state: PipelineStateType,
-): Promise<Partial<PipelineStateType>> {
-  return exporterAgent(state as GraphState);
+function toNode(agent: IAgent) {
+  return (state: PipelineStateType): Promise<Partial<PipelineStateType>> =>
+    agent.run(state as GraphState);
 }
 
 function afterExtractor(state: PipelineStateType): string {
@@ -79,21 +74,49 @@ function afterExtractor(state: PipelineStateType): string {
     console.error("[Pipeline] No content extracted from PDF. Aborting.");
     return "end";
   }
-  return "generate";
+  return "analyze";
 }
 
 export function buildGraph() {
+  const llmProvider = new GeminiProvider();
+
+  const configAgent = new ConfigAgent();
+  const extractorAgent = new ExtractorAgent();
+  const analyzerAgent = new AnalyzerAgent(llmProvider);
+  const qaAgent = new QAAgent(llmProvider);
+  const clozeAgent = new ClozeAgent(llmProvider);
+  const exporterAgent = new ExporterAgent();
+
+  async function cardGenerationNode(
+    state: PipelineStateType,
+  ): Promise<Partial<PipelineStateType>> {
+    console.log("\n[Pipeline] Running QA and Cloze agents in parallel...");
+    const [qaResult, clozeResult] = await Promise.all([
+      qaAgent.run(state as GraphState),
+      clozeAgent.run(state as GraphState),
+    ]);
+    return {
+      qaCards: qaResult.qaCards ?? [],
+      clozeCards: clozeResult.clozeCards ?? [],
+    };
+  }
+
   const graph = new StateGraph(PipelineState)
-    .addNode("extractor", extractorNode)
+    .addNode("config", toNode(configAgent))
+    .addNode("extractor", toNode(extractorAgent))
+    .addNode("analyzer", toNode(analyzerAgent))
     .addNode("cardGeneration", cardGenerationNode)
-    .addNode("exporter", exporterNode)
-    .addEdge(START, "extractor")
+    .addNode("exporter", toNode(exporterAgent))
+    .addEdge(START, "config")
+    .addEdge("config", "extractor")
     .addConditionalEdges("extractor", afterExtractor, {
-      generate: "cardGeneration",
+      analyze: "analyzer",
       end: END,
     })
+    .addEdge("analyzer", "cardGeneration")
     .addEdge("cardGeneration", "exporter")
     .addEdge("exporter", END);
+
   return graph.compile();
 }
 

@@ -51,21 +51,17 @@ describe("AnkiDeckRepository", () => {
     expect(note.tags).toBe("qa important");
   });
 
-  it(
-    "serializes to a valid SQLite Buffer (no WASM memory limit)",
-    () => {
-      repo = new AnkiDeckRepository("Large Deck");
+  it("serializes to a valid SQLite Buffer (no WASM memory limit)", () => {
+    repo = new AnkiDeckRepository("Large Deck");
 
-      for (let i = 0; i < 500; i++) {
-        repo.insertQACard({ front: `Question ${i}`, back: `Answer ${i}` });
-      }
+    for (let i = 0; i < 500; i++) {
+      repo.insertQACard({ front: `Question ${i}`, back: `Answer ${i}` });
+    }
 
-      const buffer = repo.serialize();
-      expect(buffer).toBeInstanceOf(Buffer);
-      expect(buffer.length).toBeGreaterThan(0);
-    },
-    60_000,
-  );
+    const buffer = repo.serialize();
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer.length).toBeGreaterThan(0);
+  }, 60_000);
 
   it("initializes the col table with one row", () => {
     repo = new AnkiDeckRepository("Test Deck");

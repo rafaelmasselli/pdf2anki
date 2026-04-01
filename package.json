@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Converts PDF files to Anki decks using LangChain agents and Gemini",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "tsx src/index.ts",
     "build": "tsc",
@@ -38,6 +41,6 @@
     "prettier": "^3.8.1",
     "tsx": "^4.19.0",
     "typescript": "^5.5.0",
-    "vitest": "^1.6.1"
+    "vitest": "^3.2.4"
   }
 }

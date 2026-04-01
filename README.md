@@ -1,4 +1,4 @@
-# PDF to Anki Converter
+# pdf2anki
 
 A multi-agent pipeline that reads a PDF and generates an Anki deck (`.apkg`) with Q&A and Cloze flashcards, powered by [LangChain](https://js.langchain.com/), [LangGraph](https://langchain-ai.github.io/langgraphjs/), and Google Gemini.
 

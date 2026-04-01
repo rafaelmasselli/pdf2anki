@@ -1,5 +1,5 @@
 {
-  "name": "convert-anki",
+  "name": "pdf2anki",
   "version": "1.0.0",
   "description": "Converts PDF files to Anki decks using LangChain agents and Gemini",
   "type": "module",
@@ -12,6 +12,7 @@
     "@langchain/community": "^1.1.27",
     "@langchain/core": "^1.1.38",
     "@langchain/google-genai": "^2.1.26",
+    "@langchain/google-vertexai": "^2.1.26",
     "@langchain/langgraph": "^1.2.6",
     "anki-apkg-export": "^4.0.3",
     "dotenv": "^16.4.5",

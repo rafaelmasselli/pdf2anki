@@ -28,8 +28,5 @@ Rules:
 - Ignore headers, page numbers, footnotes, and formatting artifacts
 Example: "The capital of France is {{c1::Paris}}, which is located on the {{c2::Seine}} river."`,
   ],
-  [
-    "human",
-    "Generate cloze deletion Anki cards from the following text excerpt:\n\n{text}",
-  ],
+  ["human", "Generate cloze deletion Anki cards from the following text excerpt:\n\n{text}"],
 ]);

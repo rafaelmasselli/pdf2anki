@@ -8,10 +8,7 @@ export class AnkiDatabase {
   readonly tmpPath: string;
 
   constructor() {
-    this.tmpPath = join(
-      tmpdir(),
-      `anki-${Date.now()}-${Math.random().toString(36).slice(2)}.db`,
-    );
+    this.tmpPath = join(tmpdir(), `anki-${Date.now()}-${Math.random().toString(36).slice(2)}.db`);
     this.db = new Database(this.tmpPath);
     this.createSchema();
   }

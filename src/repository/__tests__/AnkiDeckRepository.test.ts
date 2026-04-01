@@ -12,9 +12,7 @@ describe("AnkiDeckRepository", () => {
     repo = new AnkiDeckRepository("Test Deck");
     repo.insertQACard({ front: "What is TypeScript?", back: "A typed superset of JavaScript." });
 
-    const note = repo["connection"].db
-      .prepare("SELECT flds FROM notes")
-      .get() as { flds: string };
+    const note = repo["connection"].db.prepare("SELECT flds FROM notes").get() as { flds: string };
 
     expect(note.flds).toContain("What is TypeScript?");
     expect(note.flds).toContain("A typed superset of JavaScript.");
@@ -24,9 +22,7 @@ describe("AnkiDeckRepository", () => {
     repo = new AnkiDeckRepository("Test Deck");
     repo.insertClozeCard({ text: "TypeScript is a {{c1::typed}} superset of JavaScript." });
 
-    const note = repo["connection"].db
-      .prepare("SELECT flds FROM notes")
-      .get() as { flds: string };
+    const note = repo["connection"].db.prepare("SELECT flds FROM notes").get() as { flds: string };
 
     expect(note.flds).toContain("TypeScript is a {{c1::typed}} superset of JavaScript.");
   });
@@ -37,9 +33,11 @@ describe("AnkiDeckRepository", () => {
     repo.insertQACard({ front: "Q2", back: "A2" });
     repo.insertClozeCard({ text: "Cloze {{c1::one}}" });
 
-    const count = (repo["connection"].db
-      .prepare("SELECT COUNT(*) as count FROM cards")
-      .get() as { count: number }).count;
+    const count = (
+      repo["connection"].db.prepare("SELECT COUNT(*) as count FROM cards").get() as {
+        count: number;
+      }
+    ).count;
 
     expect(count).toBe(3);
   });
@@ -48,9 +46,7 @@ describe("AnkiDeckRepository", () => {
     repo = new AnkiDeckRepository("Test Deck");
     repo.insertQACard({ front: "Q", back: "A" }, ["qa", "important"]);
 
-    const note = repo["connection"].db
-      .prepare("SELECT tags FROM notes")
-      .get() as { tags: string };
+    const note = repo["connection"].db.prepare("SELECT tags FROM notes").get() as { tags: string };
 
     expect(note.tags).toBe("qa important");
   });
@@ -70,9 +66,9 @@ describe("AnkiDeckRepository", () => {
   it("initializes the col table with one row", () => {
     repo = new AnkiDeckRepository("Test Deck");
 
-    const count = (repo["connection"].db
-      .prepare("SELECT COUNT(*) as count FROM col")
-      .get() as { count: number }).count;
+    const count = (
+      repo["connection"].db.prepare("SELECT COUNT(*) as count FROM col").get() as { count: number }
+    ).count;
 
     expect(count).toBe(1);
   });

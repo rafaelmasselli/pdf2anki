@@ -1,8 +1,5 @@
 import type { IAgent, ILLMProvider } from "../../ports/index.js";
-import type {
-  GraphState,
-  DocumentSummary,
-} from "../../../shared/models/index.js";
+import type { GraphState, DocumentSummary } from "../../../shared/models/index.js";
 import { analyzerPrompt } from "./prompt.js";
 import { analyzerSchema } from "./schema.js";
 
@@ -26,13 +23,9 @@ export class AnalyzerAgent implements IAgent {
       summary: result.summary,
     };
 
-    console.log(
-      `[AnalyzerAgent] Document language : ${documentSummary.language}`,
-    );
+    console.log(`[AnalyzerAgent] Document language : ${documentSummary.language}`);
     console.log(`[AnalyzerAgent] Topic             : ${documentSummary.topic}`);
-    console.log(
-      `[AnalyzerAgent] Key concepts      : ${documentSummary.keyConcepts}`,
-    );
+    console.log(`[AnalyzerAgent] Key concepts      : ${documentSummary.keyConcepts}`);
 
     return { documentSummary };
   }

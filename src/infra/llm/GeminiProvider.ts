@@ -6,9 +6,7 @@ export class GeminiProvider implements ILLMProvider {
 
   constructor() {
     if (!process.env.GOOGLE_VERTEX_PROJECT) {
-      throw new Error(
-        "GOOGLE_VERTEX_PROJECT is not set in environment variables",
-      );
+      throw new Error("GOOGLE_VERTEX_PROJECT is not set in environment variables");
     }
 
     this.model = new ChatVertexAI({

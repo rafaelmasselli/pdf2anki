@@ -3,12 +3,7 @@ import { dirname, extname, basename } from "path";
 import JSZip from "jszip";
 import { AnkiDeckRepository } from "../repository/AnkiDeckRepository.js";
 import type { IAnkiDeckService } from "../core/ports/index.js";
-import type {
-  QACard,
-  ClozeCard,
-  SaveDeckDTO,
-  SaveDeckResultDTO,
-} from "../shared/models/index.js";
+import type { QACard, ClozeCard, SaveDeckDTO, SaveDeckResultDTO } from "../shared/models/index.js";
 
 interface CardBatch {
   index: number;
@@ -26,20 +21,12 @@ export class AnkiDeckService implements IAnkiDeckService {
 
     for (const batch of batches) {
       const partName =
-        batches.length > 1
-          ? `${deckName} (Part ${batch.index}/${batches.length})`
-          : deckName;
+        batches.length > 1 ? `${deckName} (Part ${batch.index}/${batches.length})` : deckName;
 
       const partPath =
-        batches.length > 1
-          ? this.buildPartPath(outputPath, batch.index)
-          : outputPath;
+        batches.length > 1 ? this.buildPartPath(outputPath, batch.index) : outputPath;
 
-      const buffer = await this.buildApkg(
-        partName,
-        batch.qaCards,
-        batch.clozeCards,
-      );
+      const buffer = await this.buildApkg(partName, batch.qaCards, batch.clozeCards);
       this.writeFile(partPath, buffer);
       savedPaths.push(partPath);
     }
@@ -47,26 +34,17 @@ export class AnkiDeckService implements IAnkiDeckService {
     return { savedPaths };
   }
 
-  private splitIntoBatches(
-    qaCards: QACard[],
-    clozeCards: ClozeCard[],
-  ): CardBatch[] {
+  private splitIntoBatches(qaCards: QACard[], clozeCards: ClozeCard[]): CardBatch[] {
     const all = [
       ...qaCards.map((card) => ({ type: "qa" as const, card })),
       ...clozeCards.map((card) => ({ type: "cloze" as const, card })),
     ];
 
-    return this.chunk(all, AnkiDeckService.MAX_CARDS_PER_FILE).map(
-      (chunk, i) => ({
-        index: i + 1,
-        qaCards: chunk
-          .filter((c) => c.type === "qa")
-          .map((c) => c.card as QACard),
-        clozeCards: chunk
-          .filter((c) => c.type === "cloze")
-          .map((c) => c.card as ClozeCard),
-      }),
-    );
+    return this.chunk(all, AnkiDeckService.MAX_CARDS_PER_FILE).map((chunk, i) => ({
+      index: i + 1,
+      qaCards: chunk.filter((c) => c.type === "qa").map((c) => c.card as QACard),
+      clozeCards: chunk.filter((c) => c.type === "cloze").map((c) => c.card as ClozeCard),
+    }));
   }
 
   private chunk<T>(array: T[], size: number): T[][] {

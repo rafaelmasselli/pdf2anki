@@ -42,10 +42,7 @@ export class AnkiDeckRepository {
     const model = new AnkiModelAdapter(this.modelId, this.deckId).adapt();
     const deck = new AnkiDeckAdapter(this.deckId, deckName).adapt();
     const deckConf = new AnkiDeckConfAdapter().adapt();
-    const collectionConf = new AnkiCollectionConfAdapter(
-      this.deckId,
-      this.modelId,
-    ).adapt();
+    const collectionConf = new AnkiCollectionConfAdapter(this.deckId, this.modelId).adapt();
 
     this.connection.db
       .prepare(

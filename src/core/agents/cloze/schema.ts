@@ -5,9 +5,7 @@ export const clozeSchema = z.object({
     z.object({
       text: z
         .string()
-        .describe(
-          "A sentence with one or more cloze deletions using {{c1::word}} syntax",
-        ),
+        .describe("A sentence with one or more cloze deletions using {{c1::word}} syntax"),
     }),
   ),
 });

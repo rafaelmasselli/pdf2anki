@@ -2,10 +2,7 @@ import "dotenv/config";
 import { resolve, basename, extname } from "path";
 import { existsSync } from "fs";
 import { Pipeline } from "./core/pipeline/index.js";
-import {
-  RunPipelineDTOSchema,
-  PipelineResultDTOSchema,
-} from "./shared/models/index.js";
+import { RunPipelineDTOSchema, PipelineResultDTOSchema } from "./shared/models/index.js";
 import type { PipelineResultDTO } from "./shared/models/index.js";
 
 class CLI {
@@ -26,10 +23,7 @@ class CLI {
 
     const pdfPath = resolve(rawPdfPath);
     const deckName = this.args[1] ?? basename(rawPdfPath, extname(rawPdfPath));
-    const outputPath = resolve(
-      "output",
-      `${deckName.replace(/\s+/g, "_")}.apkg`,
-    );
+    const outputPath = resolve("output", `${deckName.replace(/\s+/g, "_")}.apkg`);
 
     const input = RunPipelineDTOSchema.safeParse({
       pdfPath,

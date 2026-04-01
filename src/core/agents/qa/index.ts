@@ -7,13 +7,9 @@ export class QAAgent implements IAgent {
   constructor(private readonly llmProvider: ILLMProvider) {}
 
   async run(state: GraphState): Promise<Partial<GraphState>> {
-    console.log(
-      `\n[QAAgent] Generating Q&A cards for ${state.chunks.length} chunk(s)...`,
-    );
+    console.log(`\n[QAAgent] Generating Q&A cards for ${state.chunks.length} chunk(s)...`);
 
-    const chain = qaPrompt.pipe(
-      this.llmProvider.getModel().withStructuredOutput(qaSchema),
-    );
+    const chain = qaPrompt.pipe(this.llmProvider.getModel().withStructuredOutput(qaSchema));
 
     const allCards: QACard[] = [];
     const contextVars = this.buildContextVars(state);
@@ -37,7 +33,21 @@ export class QAAgent implements IAgent {
 
   private buildContextVars(state: GraphState) {
     const { language, level, goal, additionalNotes } = state.studyContext;
-    const { language: docLanguage, topic: docTopic, keyConcepts: docKeyConcepts, summary: docSummary } = state.documentSummary;
-    return { language, level, goal, additionalNotes, docLanguage, docTopic, docKeyConcepts, docSummary };
+    const {
+      language: docLanguage,
+      topic: docTopic,
+      keyConcepts: docKeyConcepts,
+      summary: docSummary,
+    } = state.documentSummary;
+    return {
+      language,
+      level,
+      goal,
+      additionalNotes,
+      docLanguage,
+      docTopic,
+      docKeyConcepts,
+      docSummary,
+    };
   }
 }

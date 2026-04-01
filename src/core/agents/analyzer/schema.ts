@@ -1,14 +1,8 @@
 import { z } from "zod";
 
 export const analyzerSchema = z.object({
-  language: z
-    .string()
-    .describe(
-      "The primary language of the document (e.g. English, Portuguese)",
-    ),
-  topic: z
-    .string()
-    .describe("The main subject or topic of the document in one sentence"),
+  language: z.string().describe("The primary language of the document (e.g. English, Portuguese)"),
+  topic: z.string().describe("The main subject or topic of the document in one sentence"),
   keyConcepts: z
     .string()
     .describe(

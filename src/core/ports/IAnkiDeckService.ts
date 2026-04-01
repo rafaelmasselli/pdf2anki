@@ -1,7 +1,4 @@
-import type {
-  SaveDeckDTO,
-  SaveDeckResultDTO,
-} from "../../shared/models/index.js";
+import type { SaveDeckDTO, SaveDeckResultDTO } from "../../shared/models/index.js";
 
 /**
  * Contract for the service that orchestrates deck building and persistence.

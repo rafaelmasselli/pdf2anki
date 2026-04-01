@@ -7,21 +7,15 @@ export class ClozeAgent implements IAgent {
   constructor(private readonly llmProvider: ILLMProvider) {}
 
   async run(state: GraphState): Promise<Partial<GraphState>> {
-    console.log(
-      `\n[ClozeAgent] Generating Cloze cards for ${state.chunks.length} chunk(s)...`,
-    );
+    console.log(`\n[ClozeAgent] Generating Cloze cards for ${state.chunks.length} chunk(s)...`);
 
-    const chain = clozePrompt.pipe(
-      this.llmProvider.getModel().withStructuredOutput(clozeSchema),
-    );
+    const chain = clozePrompt.pipe(this.llmProvider.getModel().withStructuredOutput(clozeSchema));
 
     const allCards: ClozeCard[] = [];
     const contextVars = this.buildContextVars(state);
 
     for (let i = 0; i < state.chunks.length; i++) {
-      console.log(
-        `[ClozeAgent] Processing chunk ${i + 1}/${state.chunks.length}`,
-      );
+      console.log(`[ClozeAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
       try {
         const result = await chain.invoke({
           text: state.chunks[i],
@@ -39,7 +33,21 @@ export class ClozeAgent implements IAgent {
 
   private buildContextVars(state: GraphState) {
     const { language, level, goal, additionalNotes } = state.studyContext;
-    const { language: docLanguage, topic: docTopic, keyConcepts: docKeyConcepts, summary: docSummary } = state.documentSummary;
-    return { language, level, goal, additionalNotes, docLanguage, docTopic, docKeyConcepts, docSummary };
+    const {
+      language: docLanguage,
+      topic: docTopic,
+      keyConcepts: docKeyConcepts,
+      summary: docSummary,
+    } = state.documentSummary;
+    return {
+      language,
+      level,
+      goal,
+      additionalNotes,
+      docLanguage,
+      docTopic,
+      docKeyConcepts,
+      docSummary,
+    };
   }
 }

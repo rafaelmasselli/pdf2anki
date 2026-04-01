@@ -7,8 +7,5 @@ export const analyzerPrompt = ChatPromptTemplate.fromMessages([
 You will identify the document's language, main topic, key concepts, and produce a comprehensive summary.
 Be thorough — do not omit important information. The summary will be used to give context to another AI generating study flashcards.`,
   ],
-  [
-    "human",
-    `Analyze the following document and extract its metadata:\n\n{fullText}`,
-  ],
+  ["human", `Analyze the following document and extract its metadata:\n\n{fullText}`],
 ]);

@@ -80,11 +80,7 @@ export class Pipeline {
     this.exporterAgent = new ExporterAgent();
   }
 
-  async run(
-    pdfPath: string,
-    deckName: string,
-    outputPath: string,
-  ): Promise<GraphState> {
+  async run(pdfPath: string, deckName: string, outputPath: string): Promise<GraphState> {
     const app = this.buildGraph();
 
     const initialState: Partial<typeof Pipeline.state.State> = {
@@ -125,9 +121,7 @@ export class Pipeline {
   }
 
   private toNode(agent: IAgent) {
-    return (
-      state: typeof Pipeline.state.State,
-    ): Promise<Partial<typeof Pipeline.state.State>> =>
+    return (state: typeof Pipeline.state.State): Promise<Partial<typeof Pipeline.state.State>> =>
       agent.run(state as GraphState);
   }
 

@@ -34,8 +34,7 @@ export class ConfigAgent implements IAgent {
       message: "What type of study is this?",
       choices: [
         {
-          title:
-            "English learning  —  English front, Portuguese back with translation",
+          title: "English learning  —  English front, Portuguese back with translation",
           value: "english-learning",
         },
         {
@@ -67,8 +66,7 @@ export class ConfigAgent implements IAgent {
       {
         type: "text",
         name: "language",
-        message:
-          "Language for the cards (e.g. Portuguese, English, same as PDF):",
+        message: "Language for the cards (e.g. Portuguese, English, same as PDF):",
         initial: "same as PDF",
       },
       {

@@ -28,7 +28,7 @@ export class AnkiModelAdapter {
       ],
       flds: [
         { name: "Front", ord: 0, sticky: false, rtl: false, font: "Arial", size: 20 },
-        { name: "Back",  ord: 1, sticky: false, rtl: false, font: "Arial", size: 20 },
+        { name: "Back", ord: 1, sticky: false, rtl: false, font: "Arial", size: 20 },
       ],
       css: ".card { font-family: arial; font-size: 20px; text-align: center; color: black; background-color: white; }",
       latexPre:

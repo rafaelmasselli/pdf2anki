@@ -1,7 +1,12 @@
 import "dotenv/config";
 import { resolve, basename, extname } from "path";
 import { existsSync } from "fs";
-import { Pipeline } from "./graph.js";
+import { Pipeline } from "./core/pipeline/index.js";
+import {
+  RunPipelineDTOSchema,
+  PipelineResultDTOSchema,
+} from "./shared/models/index.js";
+import type { PipelineResultDTO } from "./shared/models/index.js";
 
 class CLI {
   private readonly args: string[];
@@ -11,54 +16,76 @@ class CLI {
   }
 
   async run(): Promise<void> {
-    this.validateArgs();
+    const rawPdfPath = this.args[0];
 
-    const pdfPath = resolve(this.args[0]);
-    const deckName = this.args[1] ?? basename(pdfPath, extname(pdfPath));
+    if (!rawPdfPath) {
+      console.error("Usage: node src/index.ts <pdf-path> [deck-name]");
+      console.error('Example: node src/index.ts ./study.pdf "My Study Deck"');
+      process.exit(1);
+    }
+
+    const pdfPath = resolve(rawPdfPath);
+    const deckName = this.args[1] ?? basename(rawPdfPath, extname(rawPdfPath));
     const outputPath = resolve(
       "output",
       `${deckName.replace(/\s+/g, "_")}.apkg`,
     );
 
-    this.validateFile(pdfPath);
+    const input = RunPipelineDTOSchema.safeParse({
+      pdfPath,
+      deckName,
+      outputPath,
+    });
+
+    if (!input.success) {
+      console.error("Invalid input:");
+      for (const issue of input.error.issues) {
+        console.error(`  ${issue.path.join(".")}: ${issue.message}`);
+      }
+      process.exit(1);
+    }
+
+    if (!existsSync(input.data.pdfPath)) {
+      console.error(`Error: File not found: ${input.data.pdfPath}`);
+      process.exit(1);
+    }
+
+    if (!input.data.pdfPath.toLowerCase().endsWith(".pdf")) {
+      console.error("Error: Input file must be a PDF");
+      process.exit(1);
+    }
 
     try {
       const pipeline = new Pipeline();
-      const result = await pipeline.run(pdfPath, deckName, outputPath);
-
-      console.log("\n=== Done! ===");
-      console.log(`Pages processed : ${result.totalPages}`);
-      console.log(`Chunks generated: ${result.chunks.length}`);
-      console.log(`Q&A cards       : ${result.qaCards.length}`);
-      console.log(`Cloze cards     : ${result.clozeCards.length}`);
-      console.log(
-        `Total cards     : ${result.qaCards.length + result.clozeCards.length}`,
+      const state = await pipeline.run(
+        input.data.pdfPath,
+        input.data.deckName,
+        input.data.outputPath,
       );
-      console.log(`Output file     : ${result.outputPath}`);
+
+      const result = PipelineResultDTOSchema.parse({
+        totalPages: state.totalPages,
+        totalChunks: state.chunks.length,
+        qaCards: state.qaCards.length,
+        clozeCards: state.clozeCards.length,
+        outputPath: state.outputPath,
+      } satisfies PipelineResultDTO);
+
+      this.printResult(result);
     } catch (err) {
       console.error("\nPipeline failed:", err);
       process.exit(1);
     }
   }
 
-  private validateArgs(): void {
-    if (this.args.length < 1) {
-      console.error("Usage: node src/index.ts <pdf-path> [deck-name]");
-      console.error('Example: node src/index.ts ./study.pdf "My Study Deck"');
-      process.exit(1);
-    }
-  }
-
-  private validateFile(pdfPath: string): void {
-    if (!existsSync(pdfPath)) {
-      console.error(`Error: File not found: ${pdfPath}`);
-      process.exit(1);
-    }
-
-    if (!pdfPath.toLowerCase().endsWith(".pdf")) {
-      console.error("Error: Input file must be a PDF");
-      process.exit(1);
-    }
+  private printResult(result: PipelineResultDTO): void {
+    console.log("\n=== Done! ===");
+    console.log(`Pages processed : ${result.totalPages}`);
+    console.log(`Chunks generated: ${result.totalChunks}`);
+    console.log(`Q&A cards       : ${result.qaCards}`);
+    console.log(`Cloze cards     : ${result.clozeCards}`);
+    console.log(`Total cards     : ${result.qaCards + result.clozeCards}`);
+    console.log(`Output file     : ${result.outputPath}`);
   }
 }
 

@@ -13,6 +13,11 @@ export const analyzerSchema = z.object({
     .describe(
       "A comprehensive paragraph summarizing the full content of the document, preserving all important details",
     ),
+  modules: z
+    .array(z.string())
+    .describe(
+      "An ordered list of the main modules, chapters, or thematic sections found in the document. Each entry should be a short, descriptive title (e.g. 'Introduction to OOP', 'Design Patterns'). Return between 3 and 10 items depending on document length.",
+    ),
 });
 
 export type AnalyzerSchemaOutput = z.infer<typeof analyzerSchema>;

@@ -1,6 +1,6 @@
 import type { AnkiModel } from "./anki-types.js";
 
-export class AnkiModelAdapter {
+export class AnkiClozeModelAdapter {
   constructor(
     private readonly modelId: number,
     private readonly deckId: number,
@@ -9,34 +9,28 @@ export class AnkiModelAdapter {
   adapt(): AnkiModel {
     return {
       id: this.modelId,
-      name: "Basic (with Hint)",
-      type: 0,
+      name: "Cloze",
+      type: 1,
       mod: this.nowSeconds(),
       usn: -1,
       sortf: 0,
       did: this.deckId,
       tmpls: [
         {
-          name: "Card 1",
+          name: "Cloze",
           ord: 0,
-          qfmt: "{{Front}}",
-          afmt:
-            "{{FrontSide}}" +
-            '\n\n{{#Hint}}<div class="hint">Hint: {{Hint}}</div>{{/Hint}}' +
-            "\n\n<hr id=answer>\n\n{{Back}}",
+          qfmt: "{{cloze:Text}}",
+          afmt: "{{cloze:Text}}<br><br>{{Extra}}",
           did: null,
           bqfmt: "",
           bafmt: "",
         },
       ],
       flds: [
-        { name: "Front", ord: 0, sticky: false, rtl: false, font: "Arial", size: 20 },
-        { name: "Back", ord: 1, sticky: false, rtl: false, font: "Arial", size: 20 },
-        { name: "Hint", ord: 2, sticky: false, rtl: false, font: "Arial", size: 16 },
+        { name: "Text", ord: 0, sticky: false, rtl: false, font: "Arial", size: 20 },
+        { name: "Extra", ord: 1, sticky: false, rtl: false, font: "Arial", size: 20 },
       ],
-      css:
-        ".card { font-family: arial; font-size: 20px; text-align: center; color: black; background-color: white; }" +
-        " .hint { font-size: 14px; color: #888; margin-top: 8px; font-style: italic; }",
+      css: ".card { font-family: arial; font-size: 20px; text-align: left; color: black; background-color: white; } .cloze { font-weight: bold; color: blue; }",
       latexPre:
         "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
       latexPost: "\\end{document}",

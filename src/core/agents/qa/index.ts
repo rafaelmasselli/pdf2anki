@@ -10,25 +10,24 @@ export class QAAgent implements IAgent {
     console.log(`\n[QAAgent] Generating Q&A cards for ${state.chunks.length} chunk(s)...`);
 
     const chain = qaPrompt.pipe(this.llmProvider.getModel().withStructuredOutput(qaSchema));
-
-    const allCards: QACard[] = [];
     const contextVars = this.buildContextVars(state);
 
-    for (let i = 0; i < state.chunks.length; i++) {
-      console.log(`[QAAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
-      try {
-        const result = await chain.invoke({
-          text: state.chunks[i],
-          ...contextVars,
-        });
-        allCards.push(...result.cards);
-      } catch (err) {
-        console.warn(`[QAAgent] Failed to process chunk ${i + 1}:`, err);
-      }
-    }
+    const results = await Promise.all(
+      state.chunks.map((chunk, i) => {
+        console.log(`[QAAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
+        return chain
+          .invoke({ text: chunk, ...contextVars })
+          .then((result) => result.cards as QACard[])
+          .catch((err) => {
+            console.warn(`[QAAgent] Failed to process chunk ${i + 1}:`, err);
+            return [] as QACard[];
+          });
+      }),
+    );
 
-    console.log(`[QAAgent] Generated ${allCards.length} Q&A card(s)`);
-    return { qaCards: allCards };
+    const qaCards = results.flat();
+    console.log(`[QAAgent] Generated ${qaCards.length} Q&A card(s)`);
+    return { qaCards };
   }
 
   private buildContextVars(state: GraphState) {
@@ -39,15 +38,6 @@ export class QAAgent implements IAgent {
       keyConcepts: docKeyConcepts,
       summary: docSummary,
     } = state.documentSummary;
-    return {
-      language,
-      level,
-      goal,
-      additionalNotes,
-      docLanguage,
-      docTopic,
-      docKeyConcepts,
-      docSummary,
-    };
+    return { language, level, goal, additionalNotes, docLanguage, docTopic, docKeyConcepts, docSummary };
   }
 }

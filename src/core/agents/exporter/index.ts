@@ -17,7 +17,8 @@ export class ExporterAgent implements IAgent {
       `[ExporterAgent] Q&A cards: ${qaCards.length} | Cloze cards: ${clozeCards.length} | Total: ${qaCards.length + clozeCards.length}`,
     );
 
-    const dto: SaveDeckDTO = { deckName, outputPath, qaCards, clozeCards };
+    const modules = state.documentSummary?.modules ?? [];
+    const dto: SaveDeckDTO = { deckName, outputPath, qaCards, clozeCards, modules };
     const { savedPaths } = await this.deckService.save(dto);
 
     for (const path of savedPaths) {

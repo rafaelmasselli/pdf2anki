@@ -21,11 +21,13 @@ export class AnalyzerAgent implements IAgent {
       topic: result.topic,
       keyConcepts: result.keyConcepts,
       summary: result.summary,
+      modules: result.modules,
     };
 
     console.log(`[AnalyzerAgent] Document language : ${documentSummary.language}`);
     console.log(`[AnalyzerAgent] Topic             : ${documentSummary.topic}`);
     console.log(`[AnalyzerAgent] Key concepts      : ${documentSummary.keyConcepts}`);
+    console.log(`[AnalyzerAgent] Modules           : ${documentSummary.modules.join(" | ")}`);
 
     return { documentSummary };
   }

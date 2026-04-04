@@ -20,6 +20,7 @@ export const SaveDeckDTOSchema = z.object({
   outputPath: z.string().min(1),
   qaCards: z.array(QACardSchema),
   clozeCards: z.array(ClozeCardSchema),
+  modules: z.array(z.string()).default([]),
 });
 
 export const SaveDeckResultDTOSchema = z.object({

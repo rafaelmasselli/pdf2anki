@@ -1,18 +1,17 @@
 import prompts from "prompts";
 import type { IAgent } from "../../ports/index.js";
-import type { GraphState, StudyContext } from "../../../shared/models/index.js";
+import type { CardMode, GraphState, StudyContext } from "../../../shared/models/index.js";
 
 type StudyMode = "english-learning" | "university" | "custom";
 
-const PRESET_CONTEXTS: Record<Exclude<StudyMode, "custom">, StudyContext> = {
+const PRESET_CONTEXTS: Record<Exclude<StudyMode, "custom">, Omit<StudyContext, "cardMode">> = {
   "english-learning": {
     language: "Portuguese",
     level: "intermediate English learner",
     goal: "English vocabulary and comprehension",
     additionalNotes:
-      "The front of each card must be in English (the word, phrase or sentence from the text). " +
-      "The back must be in Portuguese with the translation and a brief explanation. " +
-      "For cloze cards, write the sentence in English with the key word hidden, and add the Portuguese translation below.",
+      "Q&A cards: front in English (word, phrase or sentence), back in Portuguese with translation and brief explanation. " +
+      "Cloze cards: sentence in English with the key word hidden.",
   },
   university: {
     language: "Portuguese",
@@ -48,20 +47,46 @@ export class ConfigAgent implements IAgent {
       ],
     });
 
+    const cardMode = await this.askCardMode();
+
     const studyContext: StudyContext =
       mode === "custom"
-        ? await this.buildCustomContext()
-        : PRESET_CONTEXTS[mode as Exclude<StudyMode, "custom">];
+        ? { ...(await this.buildCustomContext()), cardMode }
+        : { ...PRESET_CONTEXTS[mode as Exclude<StudyMode, "custom">], cardMode };
 
     console.log("\n[ConfigAgent] Study context configured:");
-    console.log(`  Language : ${studyContext.language}`);
-    console.log(`  Level    : ${studyContext.level}`);
-    console.log(`  Goal     : ${studyContext.goal}`);
+    console.log(`  Language  : ${studyContext.language}`);
+    console.log(`  Level     : ${studyContext.level}`);
+    console.log(`  Goal      : ${studyContext.goal}`);
+    console.log(`  Card mode : ${studyContext.cardMode}`);
 
     return { studyContext };
   }
 
-  private async buildCustomContext(): Promise<StudyContext> {
+  private async askCardMode(): Promise<CardMode> {
+    const { cardMode } = await prompts({
+      type: "select",
+      name: "cardMode",
+      message: "What type of cards do you want?",
+      choices: [
+        {
+          title: "Q&A only  —  question on front, answer on back",
+          value: "qa-only",
+        },
+        {
+          title: "Cloze only  —  fill-in-the-blank sentences",
+          value: "cloze-only",
+        },
+        {
+          title: "Both  —  Q&A and Cloze in the same deck",
+          value: "both",
+        },
+      ],
+    });
+    return cardMode as CardMode;
+  }
+
+  private async buildCustomContext(): Promise<Omit<StudyContext, "cardMode">> {
     const answers = await prompts([
       {
         type: "text",
@@ -89,14 +114,8 @@ export class ConfigAgent implements IAgent {
           { title: "Exam preparation", value: "exam preparation" },
           { title: "General review", value: "general review" },
           { title: "Language learning", value: "language learning" },
-          {
-            title: "Memorize concepts and definitions",
-            value: "memorize concepts and definitions",
-          },
-          {
-            title: "Professional certification",
-            value: "professional certification",
-          },
+          { title: "Memorize concepts and definitions", value: "memorize concepts and definitions" },
+          { title: "Professional certification", value: "professional certification" },
         ],
       },
       {

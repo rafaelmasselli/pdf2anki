@@ -7,17 +7,20 @@ interface ExtractorConfig {
   chunkSize?: number;
   chunkOverlap?: number;
   minChunkLength?: number;
+  skipFirstPages?: number;
 }
 
 export class ExtractorAgent implements IAgent {
   private readonly chunkSize: number;
   private readonly chunkOverlap: number;
   private readonly minChunkLength: number;
+  private readonly skipFirstPages: number;
 
   constructor(config: ExtractorConfig = {}) {
     this.chunkSize = config.chunkSize ?? 2000;
     this.chunkOverlap = config.chunkOverlap ?? 200;
     this.minChunkLength = config.minChunkLength ?? 50;
+    this.skipFirstPages = config.skipFirstPages ?? 5;
   }
 
   async run(state: GraphState): Promise<Partial<GraphState>> {
@@ -44,10 +47,19 @@ export class ExtractorAgent implements IAgent {
       chunkOverlap: this.chunkOverlap,
     });
 
-    const splitDocs = await splitter.splitDocuments(docs);
+    const contentDocs = docs.filter((doc) => {
+      const page = doc.metadata?.["loc"]?.["pageNumber"] ?? doc.metadata?.["page"] ?? 0;
+      return page >= this.skipFirstPages;
+    });
+
+    const splitDocs = await splitter.splitDocuments(contentDocs);
 
     return splitDocs
-      .map((doc) => doc.pageContent.trim())
-      .filter((chunk) => chunk.length > this.minChunkLength);
+      .filter((doc) => doc.pageContent.trim().length > this.minChunkLength)
+      .map((doc) => {
+        const page = doc.metadata?.["loc"]?.["pageNumber"] ?? doc.metadata?.["page"] ?? null;
+        const header = page !== null ? `[Page ${page}]\n` : "";
+        return `${header}${doc.pageContent.trim()}`;
+      });
   }
 }

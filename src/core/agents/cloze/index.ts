@@ -10,25 +10,30 @@ export class ClozeAgent implements IAgent {
     console.log(`\n[ClozeAgent] Generating Cloze cards for ${state.chunks.length} chunk(s)...`);
 
     const chain = clozePrompt.pipe(this.llmProvider.getModel().withStructuredOutput(clozeSchema));
-
-    const allCards: ClozeCard[] = [];
     const contextVars = this.buildContextVars(state);
 
-    for (let i = 0; i < state.chunks.length; i++) {
-      console.log(`[ClozeAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
-      try {
-        const result = await chain.invoke({
-          text: state.chunks[i],
-          ...contextVars,
-        });
-        allCards.push(...result.cards);
-      } catch (err) {
-        console.warn(`[ClozeAgent] Failed to process chunk ${i + 1}:`, err);
-      }
-    }
+    const results = await Promise.all(
+      state.chunks.map((chunk, i) => {
+        console.log(`[ClozeAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
+        return chain
+          .invoke({ text: chunk, ...contextVars })
+          .then((result) =>
+            result.cards.map((card) => ({ text: this.normalizeCloze(card.text) }) as ClozeCard),
+          )
+          .catch((err) => {
+            console.warn(`[ClozeAgent] Failed to process chunk ${i + 1}:`, err);
+            return [] as ClozeCard[];
+          });
+      }),
+    );
 
-    console.log(`[ClozeAgent] Generated ${allCards.length} Cloze card(s)`);
-    return { clozeCards: allCards };
+    const clozeCards = results.flat();
+    console.log(`[ClozeAgent] Generated ${clozeCards.length} Cloze card(s)`);
+    return { clozeCards };
+  }
+
+  private normalizeCloze(text: string): string {
+    return text.replace(/\{+?(c\d+::[^}]+?)\}+/g, "{{$1}}");
   }
 
   private buildContextVars(state: GraphState) {

@@ -27,6 +27,7 @@ export class Pipeline {
         level: "undergraduate",
         goal: "general review",
         additionalNotes: "none",
+        cardMode: "both",
       }),
       reducer: (_, next) => next,
     }),
@@ -36,6 +37,7 @@ export class Pipeline {
         topic: "",
         keyConcepts: "",
         summary: "",
+        modules: [],
       }),
       reducer: (_, next) => next,
     }),
@@ -136,11 +138,17 @@ export class Pipeline {
   private async cardGenerationNode(
     state: typeof Pipeline.state.State,
   ): Promise<Partial<typeof Pipeline.state.State>> {
-    console.log("\n[Pipeline] Running QA and Cloze agents in parallel...");
+    const cardMode = state.studyContext.cardMode ?? "both";
+    const runQA = cardMode !== "cloze-only";
+    const runCloze = cardMode !== "qa-only";
+
+    console.log(`\n[Pipeline] Card mode: ${cardMode}`);
+
     const [qaResult, clozeResult] = await Promise.all([
-      this.qaAgent.run(state as GraphState),
-      this.clozeAgent.run(state as GraphState),
+      runQA ? this.qaAgent.run(state as GraphState) : Promise.resolve({ qaCards: [] }),
+      runCloze ? this.clozeAgent.run(state as GraphState) : Promise.resolve({ clozeCards: [] }),
     ]);
+
     return {
       qaCards: qaResult.qaCards ?? [],
       clozeCards: clozeResult.clozeCards ?? [],

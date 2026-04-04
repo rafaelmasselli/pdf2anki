@@ -1,6 +1,9 @@
+import { randomInt, randomUUID } from "crypto";
+import type { Statement } from "better-sqlite3";
 import { AnkiDatabase } from "../infra/db/index.js";
 import {
   AnkiModelAdapter,
+  AnkiClozeModelAdapter,
   AnkiDeckAdapter,
   AnkiDeckConfAdapter,
   AnkiCollectionConfAdapter,
@@ -10,22 +13,41 @@ import type { QACard, ClozeCard } from "../shared/models/index.js";
 export class AnkiDeckRepository {
   private readonly connection: AnkiDatabase;
   private readonly deckId: number;
-  private readonly modelId: number;
-  private noteCount = 0;
+  private readonly basicModelId: number;
+  private readonly clozeModelId: number;
+  private readonly insertNoteStmt: Statement;
+  private readonly insertCardStmt: Statement;
 
   constructor(deckName: string) {
     this.connection = new AnkiDatabase();
     this.deckId = this.generateId();
-    this.modelId = this.generateId();
+    this.basicModelId = this.generateId();
+    this.clozeModelId = this.generateId();
     this.insertCollection(deckName);
+
+    this.insertNoteStmt = this.connection.db.prepare(
+      `INSERT INTO notes (id, guid, mid, mod, usn, tags, flds, sfld, csum, flags, data)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '')`,
+    );
+
+    this.insertCardStmt = this.connection.db.prepare(
+      `INSERT INTO cards (id, nid, did, ord, mod, usn, type, queue, due, ivl, factor, reps, lapses, left, odue, odid, flags, data)
+       VALUES (?, ?, ?, 0, ?, -1, 0, 0, ?, 0, 0, 0, 0, 0, 0, 0, 0, '')`,
+    );
   }
 
   insertQACard(card: QACard, tags: string[] = []): void {
-    this.insertRaw(card.front, card.back, tags);
+    const hint = card.hint ?? "";
+    this.insertNote(
+      this.basicModelId,
+      `${card.front}\x1f${card.back}\x1f${hint}`,
+      card.front,
+      tags,
+    );
   }
 
   insertClozeCard(card: ClozeCard, tags: string[] = []): void {
-    this.insertRaw(card.text, card.text, tags);
+    this.insertNote(this.clozeModelId, `${card.text}\x1f`, card.text, tags);
   }
 
   serialize(): Buffer {
@@ -39,10 +61,11 @@ export class AnkiDeckRepository {
   private insertCollection(deckName: string): void {
     const now = Math.floor(Date.now() / 1000);
 
-    const model = new AnkiModelAdapter(this.modelId, this.deckId).adapt();
+    const basicModel = new AnkiModelAdapter(this.basicModelId, this.deckId).adapt();
+    const clozeModel = new AnkiClozeModelAdapter(this.clozeModelId, this.deckId).adapt();
     const deck = new AnkiDeckAdapter(this.deckId, deckName).adapt();
     const deckConf = new AnkiDeckConfAdapter().adapt();
-    const collectionConf = new AnkiCollectionConfAdapter(this.deckId, this.modelId).adapt();
+    const collectionConf = new AnkiCollectionConfAdapter(this.deckId, this.basicModelId).adapt();
 
     this.connection.db
       .prepare(
@@ -54,59 +77,46 @@ export class AnkiDeckRepository {
         now,
         now * 1000,
         JSON.stringify(collectionConf),
-        JSON.stringify({ [this.modelId]: model }),
+        JSON.stringify({ [this.basicModelId]: basicModel, [this.clozeModelId]: clozeModel }),
         JSON.stringify({ [this.deckId]: deck }),
         JSON.stringify({ 1: deckConf }),
       );
   }
 
-  private insertRaw(front: string, back: string, tags: string[]): void {
+  private insertNote(modelId: number, flds: string, sfld: string, tags: string[]): void {
     const now = Math.floor(Date.now() / 1000);
     const noteId = this.generateId();
     const cardId = this.generateId();
 
-    this.connection.db
-      .prepare(
-        `INSERT INTO notes (id, guid, mid, mod, usn, tags, flds, sfld, csum, flags, data)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '')`,
-      )
-      .run(
-        noteId,
-        this.guid(),
-        this.modelId,
-        now,
-        -1,
-        tags.join(" "),
-        `${front}\x1f${back}`,
-        front,
-        this.fieldChecksum(front),
-      );
+    this.insertNoteStmt.run(
+      noteId,
+      this.guid(),
+      modelId,
+      now,
+      -1,
+      tags.join(" "),
+      flds,
+      sfld,
+      this.fieldChecksum(sfld),
+    );
 
-    this.connection.db
-      .prepare(
-        `INSERT INTO cards (id, nid, did, ord, mod, usn, type, queue, due, ivl, factor, reps, lapses, left, odue, odid, flags, data)
-         VALUES (?, ?, ?, 0, ?, -1, 0, 0, ?, 0, 0, 0, 0, 0, 0, 0, 0, '')`,
-      )
-      .run(cardId, noteId, this.deckId, now, ++this.noteCount);
+    this.insertCardStmt.run(cardId, noteId, this.deckId, now, noteId);
   }
 
-  private readonly baseId = Date.now();
-  private idCounter = 0;
-
   private generateId(): number {
-    return this.baseId + ++this.idCounter;
+    return Date.now() * 1000 + randomInt(1000);
   }
 
   private guid(): string {
-    return Math.random().toString(36).slice(2, 12);
+    return randomUUID().replace(/-/g, "").slice(0, 10);
   }
 
   private fieldChecksum(text: string): number {
+    const sample = text.slice(0, 9);
     let hash = 0;
-    for (let i = 0; i < Math.min(text.length, 9); i++) {
-      hash = (hash << 5) - hash + text.charCodeAt(i);
-      hash |= 0;
+    for (const char of sample) {
+      hash = (Math.imul(hash, 31) - hash + char.charCodeAt(0)) | 0;
     }
-    return Math.abs(hash);
+    return hash >>> 0;
   }
 }

@@ -95,47 +95,47 @@ export class ConfigAgent implements IAgent {
   private async buildCustomContext(): Promise<Omit<StudyContext, "cardMode">> {
     const answers = await prompts(
       [
-      {
-        type: "text",
-        name: "language",
-        message: "Language for the cards (e.g. Portuguese, English, same as PDF):",
-        initial: "same as PDF",
-      },
-      {
-        type: "select",
-        name: "level",
-        message: "Study level:",
-        choices: [
-          { title: "High school", value: "high school" },
-          { title: "Undergraduate", value: "undergraduate" },
-          { title: "Graduate / postgraduate", value: "graduate" },
-          { title: "Professional", value: "professional" },
-          { title: "Self-study", value: "self-study" },
-        ],
-      },
-      {
-        type: "select",
-        name: "goal",
-        message: "Study goal:",
-        choices: [
-          { title: "Exam preparation", value: "exam preparation" },
-          { title: "General review", value: "general review" },
-          { title: "Language learning", value: "language learning" },
-          {
-            title: "Memorize concepts and definitions",
-            value: "memorize concepts and definitions",
-          },
-          { title: "Professional certification", value: "professional certification" },
-        ],
-      },
-      {
-        type: "text",
-        name: "additionalNotes",
-        message: "Any extra instructions for the AI? (optional):",
-        initial: "none",
-      },
-    ],
-    { onCancel: () => process.exit(0) },
+        {
+          type: "text",
+          name: "language",
+          message: "Language for the cards (e.g. Portuguese, English, same as PDF):",
+          initial: "same as PDF",
+        },
+        {
+          type: "select",
+          name: "level",
+          message: "Study level:",
+          choices: [
+            { title: "High school", value: "high school" },
+            { title: "Undergraduate", value: "undergraduate" },
+            { title: "Graduate / postgraduate", value: "graduate" },
+            { title: "Professional", value: "professional" },
+            { title: "Self-study", value: "self-study" },
+          ],
+        },
+        {
+          type: "select",
+          name: "goal",
+          message: "Study goal:",
+          choices: [
+            { title: "Exam preparation", value: "exam preparation" },
+            { title: "General review", value: "general review" },
+            { title: "Language learning", value: "language learning" },
+            {
+              title: "Memorize concepts and definitions",
+              value: "memorize concepts and definitions",
+            },
+            { title: "Professional certification", value: "professional certification" },
+          ],
+        },
+        {
+          type: "text",
+          name: "additionalNotes",
+          message: "Any extra instructions for the AI? (optional):",
+          initial: "none",
+        },
+      ],
+      { onCancel: () => process.exit(0) },
     );
 
     return {

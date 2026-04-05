@@ -37,7 +37,7 @@ export class ExporterAgent implements IAgent {
   }
 
   private topicToDeckName(topic: string): string {
-    return topic.length > 80 ? topic.slice(0, 77) + "…" : topic;
+    return topic.length > 60 ? topic.slice(0, 57) + "…" : topic;
   }
 
   private topicToFilename(topic: string): string {
@@ -48,6 +48,6 @@ export class ExporterAgent implements IAgent {
       .trim()
       .replace(/\s+/g, "_")
       .toLowerCase()
-      .slice(0, 80);
+      .slice(0, 40);
   }
 }

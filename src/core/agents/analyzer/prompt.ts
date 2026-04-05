@@ -14,10 +14,10 @@ You are a document analyst. Your task is to read a full academic or technical do
 
 ## Output fields
 - language: the primary language of the document
-- topic: the main subject in one sentence
+- topic: the main subject as a short title (3–5 words maximum), written in the same language as the document
 - keyConcepts: a comma-separated list of the most important concepts, terms, and vocabulary
 - summary: a comprehensive paragraph covering all key educational content
-- modules: an ordered list of 3–10 thematic sections found in the document`,
+- modules: an ordered list of 3–10 thematic sections found in the document, each as a short title (2–4 words), written in the same language as the document`,
   ],
   ["human", "Analyze the following document and extract its metadata:\n\n{fullText}"],
 ]);
@@ -48,10 +48,10 @@ Consolidate them into unified metadata for the full document.
 
 ## Output fields
 - language: the primary language of the document
-- topic: the main subject in one sentence
+- topic: the main subject as a short title (3–5 words maximum), written in the same language as the document
 - keyConcepts: a comma-separated list of the most important concepts, terms, and vocabulary
 - summary: a comprehensive paragraph covering all key educational content
-- modules: an ordered list of 3–10 thematic sections found in the document`,
+- modules: an ordered list of 3–10 thematic sections found in the document, each as a short title (2–4 words), written in the same language as the document`,
   ],
   [
     "human",

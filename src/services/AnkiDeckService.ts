@@ -104,6 +104,6 @@ export class AnkiDeckService implements IAnkiDeckService {
       .trim()
       .replace(/\s+/g, "_")
       .toLowerCase()
-      .slice(0, 60);
+      .slice(0, 30);
   }
 }

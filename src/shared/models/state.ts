@@ -16,6 +16,7 @@ export const GraphStateSchema = z.object({
   qaCards: z.array(QACardSchema),
   clozeCards: z.array(ClozeCardSchema),
   outputPath: z.string(),
+  outputPaths: z.array(z.string()),
   error: z.string().optional(),
 });
 

@@ -1,4 +1,5 @@
 import { ChatVertexAI } from "@langchain/google-vertexai";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { ILLMProvider } from "../../core/ports/index.js";
 
 export class GeminiProvider implements ILLMProvider {
@@ -16,7 +17,7 @@ export class GeminiProvider implements ILLMProvider {
     });
   }
 
-  getModel(): ChatVertexAI {
+  getModel(): BaseChatModel {
     return this.model;
   }
 }

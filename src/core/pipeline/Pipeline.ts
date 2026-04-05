@@ -8,6 +8,7 @@ import {
   ExporterAgent,
 } from "../agents/index.js";
 import { GeminiProvider } from "../../infra/llm/index.js";
+import { AnkiDeckService } from "../../services/index.js";
 import type {
   GraphState,
   QACard,
@@ -58,6 +59,10 @@ export class Pipeline {
       reducer: (_, next) => next,
     }),
     outputPath: Annotation<string>(),
+    outputPaths: Annotation<string[]>({
+      default: () => [],
+      reducer: (_, next) => next,
+    }),
     error: Annotation<string | undefined>({
       default: () => undefined,
       reducer: (_, next) => next,
@@ -79,7 +84,7 @@ export class Pipeline {
     this.analyzerAgent = new AnalyzerAgent(this.llmProvider);
     this.qaAgent = new QAAgent(this.llmProvider);
     this.clozeAgent = new ClozeAgent(this.llmProvider);
-    this.exporterAgent = new ExporterAgent();
+    this.exporterAgent = new ExporterAgent(new AnkiDeckService());
   }
 
   async run(pdfPath: string, deckName: string, outputPath: string): Promise<GraphState> {
@@ -89,6 +94,7 @@ export class Pipeline {
       pdfPath,
       deckName,
       outputPath,
+      outputPaths: [],
       chunks: [],
       qaCards: [],
       clozeCards: [],

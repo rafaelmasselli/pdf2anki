@@ -21,3 +21,40 @@ You are a document analyst. Your task is to read a full academic or technical do
   ],
   ["human", "Analyze the following document and extract its metadata:\n\n{fullText}"],
 ]);
+
+export const chunkSummaryPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    `You are a document analyst. Summarize the following excerpt from a larger document.
+Extract only the educational content: concepts, theories, techniques, processes, and facts.
+Return a concise paragraph (3–6 sentences) preserving all important technical details.`,
+  ],
+  ["human", "{chunkText}"],
+]);
+
+export const reducePrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    `## Your role
+You are a document analyst. You have received partial summaries of sections of a larger document.
+Consolidate them into unified metadata for the full document.
+
+## Instructions
+- Merge all partial summaries into one coherent summary paragraph
+- Collect all key concepts from all sections (deduplicate)
+- Identify the overall topic from the combined content
+- Detect the primary language
+- Identify 3–10 thematic modules that represent the main sections of the full document
+
+## Output fields
+- language: the primary language of the document
+- topic: the main subject in one sentence
+- keyConcepts: a comma-separated list of the most important concepts, terms, and vocabulary
+- summary: a comprehensive paragraph covering all key educational content
+- modules: an ordered list of 3–10 thematic sections found in the document`,
+  ],
+  [
+    "human",
+    "Consolidate the following partial summaries into unified document metadata:\n\n{partialSummaries}",
+  ],
+]);

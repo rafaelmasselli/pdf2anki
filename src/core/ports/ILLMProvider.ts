@@ -1,9 +1,10 @@
-import type { ChatVertexAI } from "@langchain/google-vertexai";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 /**
  * Contract for LLM providers.
- * Typed to ChatVertexAI to preserve withStructuredOutput support (DIP).
+ * Returns a generic BaseChatModel so the core layer has no dependency on any
+ * specific provider (Vertex, OpenAI, Anthropic, etc.).
  */
 export interface ILLMProvider {
-  getModel(): ChatVertexAI;
+  getModel(): BaseChatModel;
 }

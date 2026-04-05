@@ -1,14 +1,9 @@
 import { dirname } from "path";
 import type { IAgent, IAnkiDeckService } from "../../ports/index.js";
 import type { GraphState, SaveDeckDTO } from "../../../shared/models/index.js";
-import { AnkiDeckService } from "../../../services/index.js";
 
 export class ExporterAgent implements IAgent {
-  private readonly deckService: IAnkiDeckService;
-
-  constructor(deckService: IAnkiDeckService = new AnkiDeckService()) {
-    this.deckService = deckService;
-  }
+  constructor(private readonly deckService: IAnkiDeckService) {}
 
   async run(state: GraphState): Promise<Partial<GraphState>> {
     const { qaCards, clozeCards, outputPath } = state;
@@ -38,7 +33,7 @@ export class ExporterAgent implements IAgent {
       console.log(`[ExporterAgent] Saved: ${path}`);
     }
 
-    return { outputPath: savedPaths[0] };
+    return { outputPath: savedPaths[0], outputPaths: savedPaths };
   }
 
   private topicToDeckName(topic: string): string {

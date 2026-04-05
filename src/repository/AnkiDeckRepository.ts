@@ -58,6 +58,14 @@ export class AnkiDeckRepository {
     this.connection.close();
   }
 
+  /**
+   * Executes a raw SELECT query and returns all matching rows.
+   * Intended for use in tests only — avoids exposing the internal DB connection.
+   */
+  query<T = Record<string, unknown>>(sql: string): T[] {
+    return this.connection.db.prepare(sql).all() as T[];
+  }
+
   private insertCollection(deckName: string): void {
     const now = Math.floor(Date.now() / 1000);
 

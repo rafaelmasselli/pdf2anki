@@ -1,7 +1,10 @@
+import pLimit from "p-limit";
 import type { IAgent, ILLMProvider } from "../../ports/index.js";
 import type { GraphState, ClozeCard } from "../../../shared/models/index.js";
 import { clozePrompt } from "./prompt.js";
-import { clozeSchema } from "./schema.js";
+import { clozeSchema, type ClozeSchemaOutput } from "./schema.js";
+
+const CONCURRENCY = 5;
 
 export class ClozeAgent implements IAgent {
   constructor(private readonly llmProvider: ILLMProvider) {}
@@ -11,20 +14,25 @@ export class ClozeAgent implements IAgent {
 
     const chain = clozePrompt.pipe(this.llmProvider.getModel().withStructuredOutput(clozeSchema));
     const contextVars = this.buildContextVars(state);
+    const limit = pLimit(CONCURRENCY);
 
     const results = await Promise.all(
-      state.chunks.map((chunk, i) => {
-        console.log(`[ClozeAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
-        return chain
-          .invoke({ text: chunk, ...contextVars })
-          .then((result) =>
-            result.cards.map((card) => ({ text: this.normalizeCloze(card.text) }) as ClozeCard),
-          )
-          .catch((err) => {
-            console.warn(`[ClozeAgent] Failed to process chunk ${i + 1}:`, err);
-            return [] as ClozeCard[];
-          });
-      }),
+      state.chunks.map((chunk, i) =>
+        limit(() => {
+          console.log(`[ClozeAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
+          return chain
+            .invoke({ text: chunk, ...contextVars })
+            .then((result) =>
+              (result as ClozeSchemaOutput).cards.map(
+                (card) => ({ text: this.normalizeCloze(card.text) }) as ClozeCard,
+              ),
+            )
+            .catch((err) => {
+              console.warn(`[ClozeAgent] Failed to process chunk ${i + 1}:`, err);
+              return [] as ClozeCard[];
+            });
+        }),
+      ),
     );
 
     const clozeCards = results.flat();

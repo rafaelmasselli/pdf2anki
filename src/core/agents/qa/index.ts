@@ -1,7 +1,10 @@
+import pLimit from "p-limit";
 import type { IAgent, ILLMProvider } from "../../ports/index.js";
 import type { GraphState, QACard } from "../../../shared/models/index.js";
 import { qaPrompt } from "./prompt.js";
-import { qaSchema } from "./schema.js";
+import { qaSchema, type QASchemaOutput } from "./schema.js";
+
+const CONCURRENCY = 5;
 
 export class QAAgent implements IAgent {
   constructor(private readonly llmProvider: ILLMProvider) {}
@@ -11,18 +14,21 @@ export class QAAgent implements IAgent {
 
     const chain = qaPrompt.pipe(this.llmProvider.getModel().withStructuredOutput(qaSchema));
     const contextVars = this.buildContextVars(state);
+    const limit = pLimit(CONCURRENCY);
 
     const results = await Promise.all(
-      state.chunks.map((chunk, i) => {
-        console.log(`[QAAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
-        return chain
-          .invoke({ text: chunk, ...contextVars })
-          .then((result) => result.cards as QACard[])
-          .catch((err) => {
-            console.warn(`[QAAgent] Failed to process chunk ${i + 1}:`, err);
-            return [] as QACard[];
-          });
-      }),
+      state.chunks.map((chunk, i) =>
+        limit(() => {
+          console.log(`[QAAgent] Processing chunk ${i + 1}/${state.chunks.length}`);
+          return chain
+            .invoke({ text: chunk, ...contextVars })
+            .then((result) => (result as QASchemaOutput).cards as QACard[])
+            .catch((err) => {
+              console.warn(`[QAAgent] Failed to process chunk ${i + 1}:`, err);
+              return [] as QACard[];
+            });
+        }),
+      ),
     );
 
     const qaCards = results.flat();

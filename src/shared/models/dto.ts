@@ -12,7 +12,7 @@ export const PipelineResultDTOSchema = z.object({
   totalChunks: z.number().int().nonnegative(),
   qaCards: z.number().int().nonnegative(),
   clozeCards: z.number().int().nonnegative(),
-  outputPath: z.string(),
+  outputPaths: z.array(z.string()),
 });
 
 export const SaveDeckDTOSchema = z.object({

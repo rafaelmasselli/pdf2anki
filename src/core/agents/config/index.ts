@@ -27,25 +27,28 @@ export class ConfigAgent implements IAgent {
   async run(_state: GraphState): Promise<Partial<GraphState>> {
     console.log("\n=== Study Context Setup ===\n");
 
-    const { mode } = await prompts({
-      type: "select",
-      name: "mode",
-      message: "What type of study is this?",
-      choices: [
-        {
-          title: "English learning  —  English front, Portuguese back with translation",
-          value: "english-learning",
-        },
-        {
-          title: "University  —  Portuguese cards, full summary, no info lost",
-          value: "university",
-        },
-        {
-          title: "Custom  —  Configure manually",
-          value: "custom",
-        },
-      ],
-    });
+    const { mode } = await prompts(
+      {
+        type: "select",
+        name: "mode",
+        message: "What type of study is this?",
+        choices: [
+          {
+            title: "English learning  —  English front, Portuguese back with translation",
+            value: "english-learning",
+          },
+          {
+            title: "University  —  Portuguese cards, full summary, no info lost",
+            value: "university",
+          },
+          {
+            title: "Custom  —  Configure manually",
+            value: "custom",
+          },
+        ],
+      },
+      { onCancel: () => process.exit(0) },
+    );
 
     const cardMode = await this.askCardMode();
 
@@ -64,30 +67,34 @@ export class ConfigAgent implements IAgent {
   }
 
   private async askCardMode(): Promise<CardMode> {
-    const { cardMode } = await prompts({
-      type: "select",
-      name: "cardMode",
-      message: "What type of cards do you want?",
-      choices: [
-        {
-          title: "Q&A only  —  question on front, answer on back",
-          value: "qa-only",
-        },
-        {
-          title: "Cloze only  —  fill-in-the-blank sentences",
-          value: "cloze-only",
-        },
-        {
-          title: "Both  —  Q&A and Cloze in the same deck",
-          value: "both",
-        },
-      ],
-    });
+    const { cardMode } = await prompts(
+      {
+        type: "select",
+        name: "cardMode",
+        message: "What type of cards do you want?",
+        choices: [
+          {
+            title: "Q&A only  —  question on front, answer on back",
+            value: "qa-only",
+          },
+          {
+            title: "Cloze only  —  fill-in-the-blank sentences",
+            value: "cloze-only",
+          },
+          {
+            title: "Both  —  Q&A and Cloze in the same deck",
+            value: "both",
+          },
+        ],
+      },
+      { onCancel: () => process.exit(0) },
+    );
     return cardMode as CardMode;
   }
 
   private async buildCustomContext(): Promise<Omit<StudyContext, "cardMode">> {
-    const answers = await prompts([
+    const answers = await prompts(
+      [
       {
         type: "text",
         name: "language",
@@ -127,7 +134,9 @@ export class ConfigAgent implements IAgent {
         message: "Any extra instructions for the AI? (optional):",
         initial: "none",
       },
-    ]);
+    ],
+    { onCancel: () => process.exit(0) },
+    );
 
     return {
       language: answers.language,

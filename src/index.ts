@@ -62,7 +62,7 @@ class CLI {
         totalChunks: state.chunks.length,
         qaCards: state.qaCards.length,
         clozeCards: state.clozeCards.length,
-        outputPath: state.outputPath,
+        outputPaths: state.outputPaths?.length ? state.outputPaths : [state.outputPath],
       } satisfies PipelineResultDTO);
 
       this.printResult(result);
@@ -79,7 +79,14 @@ class CLI {
     console.log(`Q&A cards       : ${result.qaCards}`);
     console.log(`Cloze cards     : ${result.clozeCards}`);
     console.log(`Total cards     : ${result.qaCards + result.clozeCards}`);
-    console.log(`Output file     : ${result.outputPath}`);
+    if (result.outputPaths.length === 1) {
+      console.log(`Output file     : ${result.outputPaths[0]}`);
+    } else {
+      console.log(`Output files    :`);
+      for (const p of result.outputPaths) {
+        console.log(`  ${p}`);
+      }
+    }
   }
 }
 

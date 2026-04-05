@@ -3,3 +3,4 @@ node_modules
 dist
 ia-credentials.json
 output
+input/*.pdf

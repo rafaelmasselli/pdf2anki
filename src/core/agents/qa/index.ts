@@ -38,6 +38,15 @@ export class QAAgent implements IAgent {
       keyConcepts: docKeyConcepts,
       summary: docSummary,
     } = state.documentSummary;
-    return { language, level, goal, additionalNotes, docLanguage, docTopic, docKeyConcepts, docSummary };
+    return {
+      language,
+      level,
+      goal,
+      additionalNotes,
+      docLanguage,
+      docTopic,
+      docKeyConcepts,
+      docSummary,
+    };
   }
 }

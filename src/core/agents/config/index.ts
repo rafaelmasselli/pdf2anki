@@ -114,7 +114,10 @@ export class ConfigAgent implements IAgent {
           { title: "Exam preparation", value: "exam preparation" },
           { title: "General review", value: "general review" },
           { title: "Language learning", value: "language learning" },
-          { title: "Memorize concepts and definitions", value: "memorize concepts and definitions" },
+          {
+            title: "Memorize concepts and definitions",
+            value: "memorize concepts and definitions",
+          },
           { title: "Professional certification", value: "professional certification" },
         ],
       },

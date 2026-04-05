@@ -4,9 +4,7 @@ export const qaSchema = z.object({
   cards: z.array(
     z.object({
       front: z.string().describe("The question for the front of the Anki card"),
-      back: z
-        .string()
-        .describe("The answer: 1–2 complete sentences, no bullet points, no filler"),
+      back: z.string().describe("The answer: 1–2 complete sentences, no bullet points, no filler"),
       hint: z
         .string()
         .optional()

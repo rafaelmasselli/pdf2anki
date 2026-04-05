@@ -6,25 +6,27 @@ A multi-agent pipeline that reads a PDF and generates an Anki deck (`.apkg`) wit
 
 ## How it works
 
-```mermaid
-flowchart TD
-    PDF([PDF File]) --> Config
-
-    subgraph pipeline [LangGraph Pipeline]
-        Config["ConfigAgent\nCollects study context\n(language, level, goal, card mode)"]
-        Extractor["ExtractorAgent\nLoads PDF and splits into chunks\n(skips cover/preface pages)"]
-        Analyzer["AnalyzerAgent\nAnalyzes full document\n(language, topic, key concepts, modules)"]
-        QA["QAAgent\nGenerates Q&A cards\n(SuperMemo rules, 5 question types, hints)"]
-        Cloze["ClozeAgent\nGenerates Cloze cards\n({{c1::word}} syntax)"]
-        Exporter["ExporterAgent\nBuilds .apkg files\n(named by document modules)"]
-    end
-
-    Config --> Extractor
-    Extractor --> Analyzer
-    Analyzer --> QA & Cloze
-    QA & Cloze --> Exporter
-    Exporter --> APKG([output/*.apkg])
-```
+> ```mermaid
+> flowchart TD
+>     PDF([PDF File]) --> Config
+>
+>     subgraph pipeline [LangGraph Pipeline]
+>         Config["ConfigAgent\nCollects study context\n(language, level, goal, card mode)"]
+>         Extractor["ExtractorAgent\nLoads PDF and splits into chunks\n(skips cover/preface pages)"]
+>         Analyzer["AnalyzerAgent\nAnalyzes full document\n(language, topic, key concepts, modules)"]
+>         QA["QAAgent\nGenerates Q&A cards\n(SuperMemo rules, 5 question types, hints)"]
+>         Cloze["ClozeAgent\nGenerates Cloze cards\n({{c1::word}} syntax)"]
+>         Exporter["ExporterAgent\nBuilds .apkg files\n(named by document modules)"]
+>     end
+>
+>     Config --> Extractor
+>     Extractor --> Analyzer
+>     Analyzer --> QA & Cloze
+>     QA & Cloze --> Exporter
+>     Exporter --> APKG([output/*.apkg])
+> ```
+>
+>
 
 LangGraph orchestrates the pipeline as a state graph. The `AnalyzerAgent` reads the entire document before card generation, giving `QAAgent` and `ClozeAgent` full context — even when processing individual chunks. `QAAgent` and `ClozeAgent` run in parallel. Output files are named after the document's thematic modules extracted by the `AnalyzerAgent`.
 
@@ -158,30 +160,36 @@ npm start -- ./input/my-document.pdf
 
 ## Study modes
 
+
 | Mode                 | Description                                                           |
 | -------------------- | --------------------------------------------------------------------- |
 | **English learning** | Front in English, back in Portuguese with translation and explanation |
 | **University**       | Portuguese cards with comprehensive summaries, no information lost    |
 | **Custom**           | Configure language, level, goal, and extra instructions manually      |
 
+
 ---
 
 ## Card types
 
-| Type      | Description                                                                                | Example                                                    |
-| --------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| **Q&A**   | Front/back flashcard following SuperMemo rules. Supports an optional hint field.           | Front: "In Git, what does a rebase do?" → Back: "It…"      |
-| **Cloze** | Fill-in-the-blank using Anki's native `{{c1::word}}` syntax, rendered with the Cloze model | `"Git uses {{c1::branches}} for parallel development."`    |
+
+| Type      | Description                                                                                | Example                                                 |
+| --------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| **Q&A**   | Front/back flashcard following SuperMemo rules. Supports an optional hint field.           | Front: "In Git, what does a rebase do?" → Back: "It…"   |
+| **Cloze** | Fill-in-the-blank using Anki's native `{{c1::word}}` syntax, rendered with the Cloze model | `"Git uses {{c1::branches}} for parallel development."` |
+
 
 ### Card mode
 
 At startup you can choose which card types to generate:
 
-| Option        | Description                          |
-| ------------- | ------------------------------------ |
-| `both`        | Generate Q&A and Cloze cards (default) |
-| `qa-only`     | Generate Q&A cards only              |
-| `cloze-only`  | Generate Cloze cards only            |
+
+| Option       | Description                            |
+| ------------ | -------------------------------------- |
+| `both`       | Generate Q&A and Cloze cards (default) |
+| `qa-only`    | Generate Q&A cards only                |
+| `cloze-only` | Generate Cloze cards only              |
+
 
 ---
 
@@ -220,20 +228,22 @@ Tests are co-located with source files under `__tests__/` directories.
 
 ## Stack
 
-| Layer         | Technology                              |
-| ------------- | --------------------------------------- |
-| Runtime       | Node.js 22 + TypeScript                 |
-| LLM           | Google Gemini via Vertex AI             |
-| Agents        | LangChain.js                            |
-| Orchestration | LangGraph.js                            |
-| PDF parsing   | `@langchain/community` + `pdf-parse`    |
-| Database      | `better-sqlite3` (disk-based SQLite)    |
-| Deck export   | `jszip` (`.apkg` = SQLite + zip)        |
-| Validation    | Zod                                     |
-| CLI prompts   | `prompts`                               |
-| Testing       | Vitest                                  |
-| Linting       | ESLint + Prettier                       |
-| CI            | GitHub Actions (Node 22 via `.nvmrc`)   |
+
+| Layer         | Technology                            |
+| ------------- | ------------------------------------- |
+| Runtime       | Node.js 22 + TypeScript               |
+| LLM           | Google Gemini via Vertex AI           |
+| Agents        | LangChain.js                          |
+| Orchestration | LangGraph.js                          |
+| PDF parsing   | `@langchain/community` + `pdf-parse`  |
+| Database      | `better-sqlite3` (disk-based SQLite)  |
+| Deck export   | `jszip` (`.apkg` = SQLite + zip)      |
+| Validation    | Zod                                   |
+| CLI prompts   | `prompts`                             |
+| Testing       | Vitest                                |
+| Linting       | ESLint + Prettier                     |
+| CI            | GitHub Actions (Node 22 via `.nvmrc`) |
+
 
 ---
 

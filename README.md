@@ -202,6 +202,8 @@ The `QAAgent` follows [SuperMemo's 20 rules](https://www.supermemo.com/en/blog/t
 
 Each run produces one or more `.apkg` files in `output/`, named after the document's thematic modules (e.g. `Version Control with Git.apkg`, `SOLID Principles.apkg`). If no modules are detected, files fall back to `_part1.apkg`, `_part2.apkg`, etc.
 
+![Anki card preview — Q&A card generated from a PDF](docs/anki-preview.png)
+
 ---
 
 ## Development
